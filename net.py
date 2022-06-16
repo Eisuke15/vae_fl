@@ -1,0 +1,65 @@
+import torch
+from torch import nn
+import torch.nn.functional as F
+
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+
+# torch.log(0)によるnanを防ぐ
+def torch_log(x):
+    return torch.log(torch.clamp(x, min=1e-10))
+
+# VAEモデルの実装
+class VAE(nn.Module):
+    def __init__(self, z_dim):
+        super(VAE, self).__init__()
+        # Encoder, xを入力にガウス分布のパラメータmu, sigmaを出力
+        self.dense_enc1 = nn.Linear(28*28, 200)
+        self.dense_enc2 = nn.Linear(200, 200)
+        self.dense_encmean = nn.Linear(200, z_dim)
+        self.dense_encvar = nn.Linear(200, z_dim)
+        # Decoder, zを入力にベルヌーイ分布のパラメータlambdaを出力
+        self.dense_dec1 = nn.Linear(z_dim, 200)
+        self.dense_dec2 = nn.Linear(200, 200)
+        self.dense_dec3 = nn.Linear(200, 28*28)
+    
+    def _encoder(self, x):
+        x = F.relu(self.dense_enc1(x))
+        x = F.relu(self.dense_enc2(x))
+        mean = self.dense_encmean(x)
+        std = F.softplus(self.dense_encvar(x))
+        return mean, std
+    
+    def _sample_z(self, mean, std):
+        #再パラメータ化トリック
+        epsilon = torch.randn(mean.shape).to(device)
+        return mean + std * epsilon
+ 
+    def _decoder(self, z):
+        x = F.relu(self.dense_dec1(z))
+        x = F.relu(self.dense_dec2(x))
+        # 出力が0~1になるようにsigmoid
+        x = torch.sigmoid(self.dense_dec3(x))
+        return x
+
+    def forward(self, x):
+        mean, std = self._encoder(x)
+        z = self._sample_z(mean, std)
+        x = self._decoder(z)
+        return x, z
+
+    def loss(self, x):
+        mean, std = self._encoder(x)
+        # KL loss(正則化項)の計算. mean, stdは (batch_size , z_dim)
+        # torch.sumは上式のJ(=z_dim)に関するもの. torch.meanはbatch_sizeに関するものなので,
+        # 上式には書いてありません.
+        KL = -0.5 * torch.mean(torch.sum(1 + torch_log(std**2) - mean**2 - std**2, dim=1))
+    
+        z = self._sample_z(mean, std)
+        y = self._decoder(z)
+
+        # reconstruction loss(負の再構成誤差)の計算. x, yともに (batch_size , 784)
+        # torch.sumは上式のD(=784)に関するもの. torch.meanはbatch_sizeに関するもの.
+        reconstruction = torch.mean(torch.sum(x * torch_log(y) + (1 - x) * torch_log(1 - y), dim=1))
+        
+        return KL, -reconstruction 
