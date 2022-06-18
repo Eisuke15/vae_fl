@@ -13,9 +13,10 @@ parser = ArgumentParser()
 parser.add_argument('--nepoch', type=int, help="number of epochs to train for", default=25)
 parser.add_argument('--bs', type=int, help="input batch size", default=64)
 parser.add_argument('--nz', type=int, help='size of the latent z vector', default=100)
+parser.add_argument('-g', '--gpu-num', type=int, help='what gpu to use', default=0)
 args = parser.parse_args()
 
-device = device()
+device = device(args.gpu_num)
 print(device)
 
 transform = transforms.Compose([
