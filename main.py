@@ -9,7 +9,7 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 
 from net import VAE
-from utils import device, mkdir_if_not_exists
+from common import device, mkdir_if_not_exists
 
 parser = ArgumentParser()
 parser.add_argument('--nepoch', type=int, help="number of epochs to train for", default=25)

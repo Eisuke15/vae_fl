@@ -7,7 +7,7 @@ import torchvision
 import torchvision.transforms as transforms
 from torch.utils.data import DataLoader
 
-from utils import mkdir_if_not_exists
+from common import mkdir_if_not_exists
 
 parser = ArgumentParser()
 parser.add_argument('--bs', type=int, help="calculation batch size", default=32)

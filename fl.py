@@ -8,7 +8,7 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 
 from net import VAE
-from utils import device, mkdir_if_not_exists
+from common import device, mkdir_if_not_exists
 from torch.utils.data.dataset import Subset
 
 
