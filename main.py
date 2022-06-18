@@ -11,13 +11,14 @@ from utils import device, mkdir_if_not_exists
 
 parser = ArgumentParser()
 parser.add_argument('--nepoch', type=int, help="number of epochs to train for", default=25)
-parser.add_argument('--bs', type=int, help="input batch size", default=64)
 parser.add_argument('--nz', type=int, help='size of the latent z vector', default=100)
 parser.add_argument('-g', '--gpu-num', type=int, help='what gpu to use', default=0)
 args = parser.parse_args()
 
 device = device(args.gpu_num)
 print(device)
+
+batch_size = 64
 
 transform = transforms.Compose([
     transforms.ToTensor(),
@@ -30,9 +31,9 @@ total_train_data_num = len(dataset_train_valid)
 val_data_num = int(total_train_data_num * 0.3)
 
 dataset_train, dataset_valid = random_split(dataset_train_valid, [total_train_data_num - val_data_num, val_data_num])
-train_dataloader = DataLoader(dataset_train, batch_size=args.bs, shuffle=True, num_workers=2)
-val_dataloader = DataLoader(dataset_valid, batch_size=args.bs, shuffle=False, num_workers=2)
-test_dataloader = DataLoader(dataset_train, batch_size=args.bs, shuffle=False, num_workers=2)
+train_dataloader = DataLoader(dataset_train, batch_size=batch_size, shuffle=True, num_workers=2)
+val_dataloader = DataLoader(dataset_valid, batch_size=batch_size, shuffle=False, num_workers=2)
+test_dataloader = DataLoader(dataset_train, batch_size=batch_size, shuffle=False, num_workers=2)
 
 vae = VAE(args.nz, device)
 vae.to(device)
