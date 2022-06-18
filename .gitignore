@@ -133,3 +133,6 @@ data/
 
 # noniid data folder
 noniid_filter/
+
+# folder for trained net
+net/

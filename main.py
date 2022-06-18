@@ -1,6 +1,8 @@
+import os
 from argparse import ArgumentParser
 from random import random
 
+import torch
 from torch.optim import Adam
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
@@ -25,6 +27,7 @@ transform = transforms.Compose([
     transforms.Lambda(lambda x: x.view(-1))])
 
 root = mkdir_if_not_exists('./data')
+save_net_path = mkdir_if_not_exists('./net/central')
 dataset_train_valid = MNIST(root=root, train=True, download=True, transform=transform)
 dataset_test = MNIST(root=root, train=False, download=True, transform=transform)
 total_train_data_num = len(dataset_train_valid)
@@ -73,12 +76,5 @@ for epoch in range(args.nepoch):
         losses_val.append(loss.detach())
     
     print(f'epoch: {epoch + 1}  Train Lower Bound: {sum(losses)/len(losses)}  Valid Lower Bound: {sum(losses_val)/len(losses_val)}')
-        
 
-
-
-
-
-
-
-
+    torch.save(vae.state_dict(), os.path.join(save_net_path, f'mnist_vae_nz{args.nz:02d}_e{epoch+1:04d}.pth'))
