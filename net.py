@@ -31,7 +31,7 @@ class VAE(nn.Module):
     
     def _sample_z(self, mean, std):
         #再パラメータ化トリック
-        epsilon = torch.randn(mean.shape).to(device)
+        epsilon = torch.randn(mean.shape).to(self.device)
         return mean + std * epsilon
  
     def _decoder(self, z):
