@@ -8,5 +8,8 @@ def mkdir_if_not_exists(dir_path):
     return dir_path
 
 
-def device(device_num):
+def device(device_num = 0):
     return torch.device(f"cuda:{device_num}" if torch.cuda.is_available() else "cpu")
+
+
+central_save_net_path = mkdir_if_not_exists('./net/central')
