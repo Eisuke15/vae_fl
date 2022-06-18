@@ -1,7 +1,6 @@
 from argparse import ArgumentParser
 from random import random
 
-import torch
 from torch.optim import Adam
 from torch.utils.data import DataLoader, random_split
 from torchvision import transforms
