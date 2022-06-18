@@ -9,7 +9,7 @@ from net import VAE
 
 device = device()
 
-parser = ArgumentParser()
+parser = ArgumentParser(description='Generate images from random latent vectors using the learned model.')
 parser.add_argument('--nepoch', type=int, help="number of epochs to generate images", default=25)
 parser.add_argument('--nz', type=int, help='size of the latent z vector', default=100)
 args = parser.parse_args()
