@@ -136,3 +136,6 @@ noniid_filter/
 
 # folder for trained net
 net/
+
+# folder for generated images
+generated_images/
