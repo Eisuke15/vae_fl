@@ -130,3 +130,6 @@ dmypy.json
 
 # mnist data folder
 data/
+
+# noniid data folder
+noniid_filter/
