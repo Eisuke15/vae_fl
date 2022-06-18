@@ -8,7 +8,7 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 
 from net import VAE
-from utils import mkdir_if_not_exists
+from utils import device, mkdir_if_not_exists
 
 parser = ArgumentParser()
 parser.add_argument('--nepoch', type=int, help="number of epochs to train for", default=25)
@@ -16,7 +16,7 @@ parser.add_argument('--bs', type=int, help="input batch size", default=64)
 parser.add_argument('--nz', type=int, help='size of the latent z vector', default=100)
 args = parser.parse_args()
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = device()
 print(device)
 
 transform = transforms.Compose([
@@ -34,7 +34,7 @@ train_dataloader = DataLoader(dataset_train, batch_size=args.bs, shuffle=True, n
 val_dataloader = DataLoader(dataset_valid, batch_size=args.bs, shuffle=False, num_workers=2)
 test_dataloader = DataLoader(dataset_train, batch_size=args.bs, shuffle=False, num_workers=2)
 
-vae = VAE(args.nz)
+vae = VAE(args.nz, device)
 vae.to(device)
 optimizer = Adam(vae.parameters())
 

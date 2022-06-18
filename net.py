@@ -2,8 +2,6 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 
 # torch.log(0)によるnanを防ぐ
 def torch_log(x):
@@ -11,7 +9,8 @@ def torch_log(x):
 
 # VAEモデルの実装
 class VAE(nn.Module):
-    def __init__(self, z_dim):
+    def __init__(self, z_dim, device):
+        self.device = device
         super(VAE, self).__init__()
         # Encoder, xを入力にガウス分布のパラメータmu, sigmaを出力
         self.dense_enc1 = nn.Linear(28*28, 200)
