@@ -9,8 +9,7 @@ def torch_log(x):
 
 # VAEモデルの実装
 class VAE(nn.Module):
-    def __init__(self, z_dim, device):
-        self.device = device
+    def __init__(self, z_dim):
         super(VAE, self).__init__()
         # Encoder, xを入力にガウス分布のパラメータmu, sigmaを出力
         self.dense_enc1 = nn.Linear(28*28, 200)
@@ -31,7 +30,7 @@ class VAE(nn.Module):
     
     def _sample_z(self, mean, std):
         #再パラメータ化トリック
-        epsilon = torch.randn(mean.shape).to(self.device)
+        epsilon = torch.randn(mean.shape).to(mean.device)
         return mean + std * epsilon
  
     def _decoder(self, z):

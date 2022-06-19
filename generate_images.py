@@ -16,7 +16,7 @@ args = parser.parse_args()
 
 central_generated_images_path = mkdir_if_not_exists('./generated_images/central')
 
-net = VAE(args.nz, device)
+net = VAE(args.nz)
 net.to(device)
 net.eval()
 
