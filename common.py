@@ -12,4 +12,6 @@ def device(device_num = 0):
     return torch.device(f"cuda:{device_num}" if torch.cuda.is_available() else "cpu")
 
 
+mnist_data_root = mkdir_if_not_exists('./data')
 central_save_net_path = mkdir_if_not_exists('./net/central')
+fl_save_net_path = mkdir_if_not_exists('./net/fl')
