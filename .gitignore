@@ -142,3 +142,6 @@ generated_images/
 
 # learning curve
 learning_curve/
+
+# latent space
+latent_space/
