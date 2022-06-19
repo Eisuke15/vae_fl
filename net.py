@@ -49,16 +49,14 @@ class VAE(nn.Module):
 
     def loss(self, x):
         mean, std = self._encoder(x)
-        # KL loss(正則化項)の計算. mean, stdは (batch_size , z_dim)
-        # torch.sumは上式のJ(=z_dim)に関するもの. torch.meanはbatch_sizeに関するものなので,
-        # 上式には書いてありません.
+
+        # sum latent vector's KL divergence, then calculate avarage in a batch.
         KL = -0.5 * torch.mean(torch.sum(1 + torch_log(std**2) - mean**2 - std**2, dim=1))
     
         z = self._sample_z(mean, std)
         y = self._decoder(z)
 
-        # reconstruction loss(負の再構成誤差)の計算. x, yともに (batch_size , 784)
-        # torch.sumは上式のD(=784)に関するもの. torch.meanはbatch_sizeに関するもの.
-        reconstruction = torch.mean(torch.sum(x * torch_log(y) + (1 - x) * torch_log(1 - y), dim=1))
-        
-        return KL, -reconstruction 
+        # sum every pixel's bce loss, then calculate avarage in a batch.
+        reconstruction = F.binary_cross_entropy(y, x, reduction="sum") / x.size()[0]
+
+        return KL, reconstruction 
