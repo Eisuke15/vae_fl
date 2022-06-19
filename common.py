@@ -1,5 +1,7 @@
 import os
+
 import torch
+from torchvision import transforms
 
 
 def mkdir_if_not_exists(dir_path):
@@ -15,3 +17,8 @@ def device(device_num = 0):
 mnist_data_root = mkdir_if_not_exists('./data')
 central_save_net_path = mkdir_if_not_exists('./net/central')
 fl_save_net_path = mkdir_if_not_exists('./net/fl')
+
+
+transform = transforms.Compose([
+    transforms.ToTensor(),
+    transforms.Lambda(lambda x: x.view(-1))])

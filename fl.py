@@ -89,4 +89,4 @@ for epoch in trange(args.nepoch, desc="federated learning epoch"):
             loss.backward()
             optimizer.step()
         
-        torch.save(net.state_dict(), os.path.join(fl_save_net_path, f'mnist_vae_nz{args.nz:02d}_e{epoch+1:04d}_n{node_num}.pth'))
+        torch.save(net.state_dict(), os.path.join(fl_save_net_path, f'mnist_vae_nz{args.nz:02d}_e{epoch+1:04d}_n{node_num:02d}.pth'))
