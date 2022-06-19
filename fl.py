@@ -13,10 +13,10 @@ from common import device, fl_save_net_path, mnist_data_root
 from net import VAE
 
 parser = ArgumentParser()
-parser.add_argument('--nepoch', type=int, help="number of epochs to train for", default=25)
+parser.add_argument('-e', '--nepoch', type=int, help="number of epochs to train for", default=25)
 parser.add_argument('-p', '--pre-nepoch', type=int, help='number of epochs of pre-self train', default=20)
 parser.add_argument('--bs', type=int, help="input batch size", default=64)
-parser.add_argument('--nz', type=int, help='size of the latent z vector', default=100)
+parser.add_argument('-z', '--nz', type=int, help='size of the latent z vector', default=100)
 parser.add_argument('--nnodes', type=int, help='number of nodes (number of labels)', default=10)
 parser.add_argument('-g', '--gpu-num', type=int, help='what gpu to use', default=0)
 args = parser.parse_args()
@@ -36,7 +36,7 @@ dataset_train = MNIST(root=mnist_data_root, train=True, download=True, transform
 subsets = [Subset(dataset_train, indices[i]) for i in range(n_node)]
 train_loaders = [DataLoader(subset, batch_size=args.bs, shuffle=True, num_workers=2) for subset in subsets]
 
-nets = [VAE(args.nz, device).to(device) for _ in range(n_node)]
+nets = [VAE(args.nz).to(device) for _ in range(n_node)]
 
 optimizers = [Adam(net.parameters()) for net in nets]
 
@@ -58,8 +58,7 @@ for epoch in trange(args.pre_nepoch, desc="pre-self training epoch"):
             loss.backward()
             optimizer.step()
 
-
-global_model = VAE(args.nz, device).to(device).state_dict()
+global_model = VAE(args.nz).to(device).state_dict()
 
 for epoch in trange(args.nepoch, desc="federated learning epoch"):
     new_global_model = global_model.copy()
