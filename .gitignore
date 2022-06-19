@@ -139,3 +139,6 @@ net/
 
 # folder for generated images
 generated_images/
+
+# learning curve
+learning_curve/
