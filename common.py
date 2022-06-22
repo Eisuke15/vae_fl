@@ -16,14 +16,14 @@ def device(device_num = 0):
 
 
 mnist_data_root = mkdir_if_not_exists('./data')
-central_net_dir = mkdir_if_not_exists('./net/central')
-fl_net_dir = mkdir_if_not_exists('./net/fl')
 
-def central_net_path(nz, epoch):
-    return os.path.join(central_net_dir, f'nz{nz:03d}/e{epoch+1:04d}.pth')
+def central_path(base, nz, epoch):
+    central_dir = mkdir_if_not_exists(f'./{base}/central/nz{nz:03d}')
+    return os.path.join(central_dir, f'e{epoch+1:04d}.' + ('pth' if base == 'net' else 'png'))
 
-def fl_net_path(nz, epoch, node):
-    return os.path.join(fl_net_dir,  f'nz{nz:03d}/e{epoch+1:04d}_n{node:02d}.pth')
+def fl_path(base, nz, epoch, node):
+    fl_dir = mkdir_if_not_exists(f'./{base}/fl/nz{nz:03d}')
+    return os.path.join(fl_dir,  f'e{epoch+1:04d}_n{node:02d}.' + ('pth' if base == 'net' else 'png'))
 
 
 transform = transforms.Compose([

@@ -9,7 +9,7 @@ from torchvision import transforms
 from torchvision.datasets import MNIST
 from tqdm import tqdm, trange
 
-from common import device, fl_save_net_path, mnist_data_root
+from common import device, fl_path, mnist_data_root
 from net import VAE
 
 parser = ArgumentParser()
@@ -88,4 +88,4 @@ for epoch in trange(args.nepoch, desc="federated learning epoch"):
             loss.backward()
             optimizer.step()
         
-        torch.save(net.state_dict(), os.path.join(fl_save_net_path, f'mnist_vae_nz{args.nz:02d}_e{epoch+1:04d}_n{node_num:02d}.pth'))
+        torch.save(net.state_dict(), fl_path('net', args.nz, epoch, node_num))
