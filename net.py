@@ -3,59 +3,116 @@ from torch import nn
 import torch.nn.functional as F
 
 
-# torch.log(0)によるnanを防ぐ
-def torch_log(x):
-    return torch.log(torch.clamp(x, min=1e-10))
-
-# VAEモデルの実装
 class VAE(nn.Module):
     def __init__(self, z_dim):
-        super(VAE, self).__init__()
-        # Encoder, xを入力にガウス分布のパラメータmu, sigmaを出力
-        self.dense_enc1 = nn.Linear(28*28, 200)
-        self.dense_enc2 = nn.Linear(200, 200)
-        self.dense_encmean = nn.Linear(200, z_dim)
-        self.dense_encvar = nn.Linear(200, z_dim)
-        # Decoder, zを入力にベルヌーイ分布のパラメータlambdaを出力
-        self.dense_dec1 = nn.Linear(z_dim, 200)
-        self.dense_dec2 = nn.Linear(200, 200)
-        self.dense_dec3 = nn.Linear(200, 28*28)
+        super().__init__()
+        self.conv1 = nn.Sequential(
+            nn.Conv2d(1, 64, 3, stride=1, padding=1),  # b, 64, 28, 28
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(),            
+            nn.MaxPool2d(2)  # b, 64, 14, 14
+        )
+        self.conv2 = nn.Sequential(
+            nn.Conv2d(64, 128, 3, stride=1, padding=1),  # b, 128, 14, 14
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(),           
+            nn.MaxPool2d(2)  # b, 128, 7, 7
+        )
+        self.conv3 = nn.Sequential(
+            nn.Conv2d(128, 256, 3, stride=1, padding=1),  # b, 256, 7, 7
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(),
+            nn.MaxPool2d(2),  # b, 256, 3, 3
+            nn.Dropout(0.2)
+        )
+        self.conv4 = nn.Sequential(
+            nn.Conv2d(256, 512, 3, stride=1, padding=0),  # b, 512, 1, 1
+            nn.BatchNorm2d(512),
+            nn.LeakyReLU(),
+        )
+        self.mean = nn.Linear(512, z_dim)  # b, 512 ==> b, latent_dim
+        
+        self.logvar = nn.Linear(512, z_dim)  # b, 512 ==> b, latent_dim
+
+        self.decoder = nn.Sequential(
+            nn.Linear(z_dim, 512),# b, latent_dim ==> b, 512
+            nn.BatchNorm1d(512),
+            nn.LeakyReLU(),
+        )
+        self.convTrans1 = nn.Sequential(
+            nn.ConvTranspose2d(512, 256, 3, stride=1, padding = 0),  # b, 256, 3, 3
+            nn.BatchNorm2d(256),
+            nn.LeakyReLU(),
+        )
+        self.convTrans2 = nn.Sequential(
+            nn.ConvTranspose2d(256, 128, 3, stride=3, padding = 1),  # b, 128, 7, 7
+            nn.BatchNorm2d(128),
+            nn.LeakyReLU(),
+        )
+        self.convTrans3 = nn.Sequential(
+            nn.ConvTranspose2d(128, 64, 4, stride=2, padding = 1),  # b, 64, 14, 14
+            nn.BatchNorm2d(64),
+            nn.LeakyReLU(),
+            nn.Dropout(0.2)
+        )
+        self.convTrans4 = nn.Sequential(
+            nn.ConvTranspose2d(64, 1, 4, stride=2, padding = 1),  # b, 1, 28, 28
+            nn.BatchNorm2d(1),
+            nn.Sigmoid()
+        )
     
     def _encoder(self, x):
-        x = F.relu(self.dense_enc1(x))
-        x = F.relu(self.dense_enc2(x))
-        mean = self.dense_encmean(x)
-        std = F.softplus(self.dense_encvar(x))
-        return mean, std
+        x = self.conv1(x)
+        x = self.conv2(x)
+        x = self.conv3(x)
+        x = self.conv4(x)
+        x = x.view(-1,512)
+        mean = self.mean(x)
+        logvar = self.logvar(x)
+        return mean, logvar
     
-    def _sample_z(self, mean, std):
-        #再パラメータ化トリック
-        epsilon = torch.randn(mean.shape).to(mean.device)
+    def _sample_z(self, mean, logvar):
+        std = torch.exp(0.5 * logvar)
+        epsilon = torch.randn_like(std)
         return mean + std * epsilon
  
     def _decoder(self, z):
-        x = F.relu(self.dense_dec1(z))
-        x = F.relu(self.dense_dec2(x))
-        # 出力が0~1になるようにsigmoid
-        x = torch.sigmoid(self.dense_dec3(x))
+        x = self.decoder(z)
+        x = x.view(-1,512,1,1)
+        x = self.convTrans1(x)
+        x = self.convTrans2(x)
+        x = self.convTrans3(x)
+        x = self.convTrans4(x)
         return x
 
     def forward(self, x):
-        mean, std = self._encoder(x)
-        z = self._sample_z(mean, std)
+        mean, logvar = self._encoder(x)
+        z = self._sample_z(mean, logvar)
         x = self._decoder(z)
-        return x, z
+        return x
 
     def loss(self, x):
-        mean, std = self._encoder(x)
-
-        # sum latent vector's KL divergence, then calculate avarage in a batch.
-        KL = -0.5 * torch.mean(torch.sum(1 + torch_log(std**2) - mean**2 - std**2, dim=1))
-    
-        z = self._sample_z(mean, std)
+        # Reconstruction + KL divergence losses summed over all elements
+        # returns avarage within a batch.
+        mean, logvar = self._encoder(x)
+        KL = -0.5 * torch.mean(torch.sum(1 + logvar - mean**2 - logvar.exp(), dim=1))
+        z = self._sample_z(mean, logvar)
         y = self._decoder(z)
+        reconstruction = F.binary_cross_entropy(y, x, reduction="sum") / x.size(0)
 
-        # sum every pixel's bce loss, then calculate avarage in a batch.
-        reconstruction = F.binary_cross_entropy(y, x, reduction="sum") / x.size()[0]
+        return KL , reconstruction
 
-        return KL, reconstruction 
+    def losses(self, x):
+        # Reconstruction + KL divergence losses summed over elements
+        # returns Tensor whose length equals batch size
+        mean, logvar = self._encoder(x)
+        KL = -0.5 * torch.sum(1 + logvar - mean**2 - logvar.exp(), dim=1)
+        z = self._sample_z(mean, logvar)
+        y = self._decoder(z)
+        reconstruction = torch.sum(F.binary_cross_entropy(y, x, reduction="none"), dim=(1, 2, 3))
+        return KL, reconstruction
+
+
+if __name__ == "__main__":
+    from torchinfo import summary
+    summary(VAE(16), (64, 1, 28, 28))
