@@ -129,19 +129,24 @@ dmypy.json
 .pyre/
 
 # mnist data folder
-data/
+data/*
 
 # noniid data folder
-noniid_filter/
+noniid_filter/*
 
 # folder for trained net
-net/
+net/*
 
 # folder for generated images
-generated_images/
+generated_images/*
 
 # learning curve
-learning_curve/
+learning_curve/*
 
 # latent space
-latent_space/
+latent_space/*
+
+# contact_pattern
+contact_pattern/*
+
+!.gitkeep
