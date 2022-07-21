@@ -113,7 +113,7 @@ for epoch in range(args.nepoch+1):
         print(f'epoch: {epoch}  Lower Bound: {np.mean(train_losses)}')
 
         if epoch%10 == 0:
-            torch.save(net.state_dict(), f'nets/e{epoch}_z{args.nz}_n{node_num}.pth')
+            torch.save(net.state_dict(), f'nets/wafl/e{epoch}_z{args.nz}_n{node_num}.pth')
             save_image(net._decoder(fixed_z), f'images/wafl/e{epoch}_z{args.nz}_n{node_num}_after.png')
 
 np.save('learning_curve/wafl/losses.npy', np.array(train_losses_series_seq))
