@@ -135,7 +135,9 @@ data/*
 noniid_filter/*
 
 # folder for trained net
-nets/*
+nets/central/*
+nets/fl/*
+nets/wafl/*
 
 # folder for generated images
 images/central/*
