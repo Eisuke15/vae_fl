@@ -135,10 +135,12 @@ data/*
 noniid_filter/*
 
 # folder for trained net
-net/*
+nets/*
 
 # folder for generated images
-generated_images/*
+images/central/*
+images/fl/*
+images/wafl/*
 
 # learning curve
 learning_curve/*
