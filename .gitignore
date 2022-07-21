@@ -143,7 +143,9 @@ images/fl/*
 images/wafl/*
 
 # learning curve
-learning_curve/*
+learning_curve/central/*
+learning_curve/fl/*
+learning_curve/wafl/*
 
 # latent space
 latent_space/*
