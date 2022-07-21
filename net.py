@@ -7,56 +7,54 @@ class VAE(nn.Module):
     def __init__(self, z_dim):
         super().__init__()
         self.conv1 = nn.Sequential(
-            nn.Conv2d(1, 64, 3, stride=1, padding=1),  # b, 64, 28, 28
+            nn.Conv2d(1, 64, 3, stride=1, padding=1, bias=False),  # b, 64, 28, 28
             nn.BatchNorm2d(64),
-            nn.LeakyReLU(),            
+            nn.LeakyReLU(inplace=True),            
             nn.MaxPool2d(2)  # b, 64, 14, 14
         )
         self.conv2 = nn.Sequential(
-            nn.Conv2d(64, 128, 3, stride=1, padding=1),  # b, 128, 14, 14
+            nn.Conv2d(64, 128, 3, stride=1, padding=1, bias=False),  # b, 128, 14, 14
             nn.BatchNorm2d(128),
-            nn.LeakyReLU(),           
+            nn.LeakyReLU(inplace=True),           
             nn.MaxPool2d(2)  # b, 128, 7, 7
         )
         self.conv3 = nn.Sequential(
-            nn.Conv2d(128, 256, 3, stride=1, padding=1),  # b, 256, 7, 7
+            nn.Conv2d(128, 256, 3, stride=1, padding=1, bias=False),  # b, 256, 7, 7
             nn.BatchNorm2d(256),
-            nn.LeakyReLU(),
+            nn.LeakyReLU(inplace=True),
             nn.MaxPool2d(2),  # b, 256, 3, 3
-            nn.Dropout(0.2)
         )
         self.conv4 = nn.Sequential(
-            nn.Conv2d(256, 512, 3, stride=1, padding=0),  # b, 512, 1, 1
+            nn.Conv2d(256, 512, 3, stride=1, padding=0, bias=False),  # b, 512, 1, 1
             nn.BatchNorm2d(512),
-            nn.LeakyReLU(),
+            nn.LeakyReLU(inplace=True),
         )
         self.mean = nn.Linear(512, z_dim)  # b, 512 ==> b, latent_dim
         
         self.logvar = nn.Linear(512, z_dim)  # b, 512 ==> b, latent_dim
 
         self.decoder = nn.Sequential(
-            nn.Linear(z_dim, 512),# b, latent_dim ==> b, 512
+            nn.Linear(z_dim, 512, bias=False),# b, latent_dim ==> b, 512
             nn.BatchNorm1d(512),
-            nn.LeakyReLU(),
+            nn.LeakyReLU(inplace=True),
         )
         self.convTrans1 = nn.Sequential(
-            nn.ConvTranspose2d(512, 256, 3, stride=1, padding = 0),  # b, 256, 3, 3
+            nn.ConvTranspose2d(512, 256, 4, stride=1, padding = 0, bias=False),  # b, 256, 4, 4
             nn.BatchNorm2d(256),
-            nn.LeakyReLU(),
+            nn.LeakyReLU(inplace=True),
         )
         self.convTrans2 = nn.Sequential(
-            nn.ConvTranspose2d(256, 128, 3, stride=3, padding = 1),  # b, 128, 7, 7
+            nn.ConvTranspose2d(256, 128, 3, stride=2, padding = 1, bias=False),  # b, 128, 7, 7
             nn.BatchNorm2d(128),
-            nn.LeakyReLU(),
+            nn.LeakyReLU(inplace=True),
         )
         self.convTrans3 = nn.Sequential(
-            nn.ConvTranspose2d(128, 64, 4, stride=2, padding = 1),  # b, 64, 14, 14
+            nn.ConvTranspose2d(128, 64, 4, stride=2, padding = 1, bias=False),  # b, 64, 14, 14
             nn.BatchNorm2d(64),
-            nn.LeakyReLU(),
-            nn.Dropout(0.2)
+            nn.LeakyReLU(inplace=True),
         )
         self.convTrans4 = nn.Sequential(
-            nn.ConvTranspose2d(64, 1, 4, stride=2, padding = 1),  # b, 1, 28, 28
+            nn.ConvTranspose2d(64, 1, 4, stride=2, padding = 1, bias=False),  # b, 1, 28, 28
             nn.BatchNorm2d(1),
             nn.Sigmoid()
         )
@@ -115,4 +113,4 @@ class VAE(nn.Module):
 
 if __name__ == "__main__":
     from torchinfo import summary
-    summary(VAE(16), (64, 1, 28, 28))
+    summary(VAE(20), (64, 1, 28, 28))
