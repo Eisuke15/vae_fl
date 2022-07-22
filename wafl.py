@@ -46,12 +46,10 @@ fixed_z = torch.randn(64, args.nz).to(device)
 
 # pre-self training
 # train local model just by using the local data
-for net in nets:
-    net.train()
-
 for epoch in range(args.pre_nepoch):
     for node_num, (net, optimizer, dataloader) in enumerate(zip(nets, optimizers, train_loaders)):
         train_losses = []
+        net.train()
         for images, _ in tqdm(dataloader, leave=False, desc="batch"):
             images = images.to(device)
 
@@ -68,6 +66,8 @@ for epoch in range(args.pre_nepoch):
         print(f'epoch: {epoch + 1} node: {node_num} Train Lower Bound: {np.mean(train_losses)}')
 
         if epoch == args.pre_nepoch - 1:
+            net.eval()
+            torch.save(net.state_dict(), f'nets/wafl/first_z{args.nz}_n{node_num}.pth')
             save_image(net._decoder(fixed_z), f'images/wafl/first_z{args.nz}_n{node_num}.png')
 
 
@@ -91,9 +91,11 @@ for epoch in range(args.nepoch+1):
         net.load_state_dict(update_model)
 
         if epoch%10 == 0:
+            net.eval()
             save_image(net._decoder(fixed_z), f'images/wafl/e{epoch}_z{args.nz}_n{node_num}_before.png')
 
         train_losses = []
+        net.train()
         for images, _ in tqdm(dataloader, leave=False, desc=f"node {node_num}"):
             images = images.to(device)
 
@@ -113,6 +115,7 @@ for epoch in range(args.nepoch+1):
         print(f'epoch: {epoch}  Lower Bound: {np.mean(train_losses)}')
 
         if epoch%10 == 0:
+            net.eval()
             torch.save(net.state_dict(), f'nets/wafl/e{epoch}_z{args.nz}_n{node_num}.pth')
             save_image(net._decoder(fixed_z), f'images/wafl/e{epoch}_z{args.nz}_n{node_num}_after.png')
 
