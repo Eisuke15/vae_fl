@@ -37,11 +37,9 @@ fixed_z = torch.randn(64, args.nz).to(device)
 
 # pre-self training
 # train local model just by using the local data
-for net in nets:
-    net.train()
-
 for epoch in trange(args.pre_nepoch, desc="pre-self training epoch"):
     for node_num, (net, optimizer, dataloader) in tqdm(enumerate(zip(nets, optimizers, train_loaders)), leave=False, total=n_node, desc="node"):
+        net.train()
         for images, _ in tqdm(dataloader, leave=False, desc="batch"):
             images = images.to(device)
 
@@ -86,4 +84,5 @@ for epoch in trange(args.nepoch+1, desc="federated learning epoch"):
         torch.save(global_model, f'nets/fl/e{epoch}_z{args.nz}.pth')
         global_vae = VAE(args.nz).to(device)
         global_vae.load_state_dict(global_model)
+        global_vae.eval()
         save_image(global_vae._decoder(fixed_z), f'images/fl/e{epoch}_z{args.nz}.png')
