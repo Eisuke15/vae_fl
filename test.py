@@ -13,9 +13,9 @@ from tqdm import trange
 from net import VAE
 
 parser = ArgumentParser(description='Generate learning curve using test images.')
+parser.add_argument('architecture', choices=["fl", "wafl"], help="architecture", default='fl')
 parser.add_argument('--nepoch', type=int, help="number of epochs to generate images", default=1000)
 parser.add_argument('--nz', type=int, help='size of the latent z vector', default=20)
-parser.add_argument('-a', '--architecture', choices=["central", "fl", "wafl"], help="architecture", default='central')
 parser.add_argument('-g', '--gpu-num', type=int, help='what gpu to use', default=0)
 args = parser.parse_args()
 
@@ -33,7 +33,8 @@ net.to(device)
 net.eval()
 
 if args.architecture == 'fl':
-    losses = []
+    fl_losses = []
+    central_losses = []
 
     for epoch in trange(0, n_epoch+1, 10):
         test_losses = []
@@ -43,13 +44,26 @@ if args.architecture == 'fl':
             KL_loss, reconstruction_loss = net.loss(images)
             loss = KL_loss + reconstruction_loss
             test_losses.append(loss.item())
-        losses.append(np.mean(test_losses))
+        fl_losses.append(np.mean(test_losses))
+
+    for epoch in trange(0, n_epoch+1, 10):
+        test_losses = []
+        net.load_state_dict(torch.load(f'nets/central/e{epoch}_z{args.nz}.pth'))
+        for images, _ in test_dataloader:
+            images = images.to(device)
+            KL_loss, reconstruction_loss = net.loss(images)
+            loss = KL_loss + reconstruction_loss
+            test_losses.append(loss.item())
+        central_losses.append(np.mean(test_losses))
+    
 
     x = np.arange(0, n_epoch+1, 10)
-    plt.plot(x, losses)
+    plt.plot(x, fl_losses, label="FL")
+    plt.plot(x, central_losses, label="Central")
     plt.ylabel('Test Loss')
     plt.xlabel('Epoch')
     plt.grid()
+    plt.legend()
     file_path = f'graph/fl_nz{args.nz:02d}.png'
     plt.savefig(file_path, bbox_inches='tight')
     print(f'image saved {file_path}')
