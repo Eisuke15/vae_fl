@@ -12,7 +12,7 @@ from tqdm import tqdm
 from net import VAE
 
 parser = ArgumentParser()
-parser.add_argument('--nepoch', type=int, help="number of epochs to train for", default=200)
+parser.add_argument('--nepoch', type=int, help="number of epochs to train for", default=1000)
 parser.add_argument('--nz', type=int, help='size of the latent z vector', default=20)
 parser.add_argument('-g', '--gpu-num', type=int, help='what gpu to use', default=0)
 args = parser.parse_args()
